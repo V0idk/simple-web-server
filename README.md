@@ -1,22 +1,22 @@
-# Introdution
+# INTRODUCTION
 simple static web server.
 * epoll(ET) + nonblocking
 * thread pool
 * keeplive
 
-# build
+# BUILD
 
 ```sh
 mkdir build && cmake ..
 ```
 
-# uasge
+# USAGE
 
 ```sh
 ./httpsrv -p PORT -d DIR -t THREAD-NUM
 ```
 
-# to to
+# TO DO
 
 * fastcgi
 * cache
