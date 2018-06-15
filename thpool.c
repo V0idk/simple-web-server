@@ -113,7 +113,7 @@ int thpool_add_task(thpool* thpool_ptr, void (*function)(void*), void* arg){
 }
 
 
-task * get_task(taskqueue *tasks){
+static task * get_task(taskqueue *tasks){
   pthread_mutex_lock(&tasks->rw_lock);
   
 	task* task_p = tasks->head;
