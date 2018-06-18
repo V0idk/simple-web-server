@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
                     {
                         //EAGAIN,EWOULDBLOCK属于本应阻塞错误, 可重试.
                         if ((errno == EAGAIN) || (errno == EWOULDBLOCK))  break;
-                        log_err("accept");
+                        log_warns("accept");//too many open files
                         break;
                     }
                     make_socket_non_blocking(infd);
@@ -203,7 +203,7 @@ static int worker_loop(void *ptr){
             clean_request(request);
             return 0;
         }
-        if (rret <= 0){//读取发生错误
+        if (rret < 0){//读取发生错误
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)){//可重试错误
                 //处理完毕
                 if(request->keeplive){
@@ -271,6 +271,7 @@ static int worker_loop(void *ptr){
         //    return -1;
         }
     }
+    // clean_request(request);
     return 0;
 }
 

@@ -21,3 +21,9 @@ mkdir build && cmake ..
 * fastcgi
 * cache
 * ...
+
+
+# TEST
+
+Speed=516420 pages/min, 559455 bytes/sec.
+
