@@ -102,6 +102,7 @@ static void check_option(int argc, char *argv[]){
     struct option long_option[] = {
             {"help", no_argument, NULL, 'h'},
             {"port", required_argument,NULL,'p'},
+            {"thread",required_argument,NULL,'t'},
             {NULL, 0, NULL, 0}};
 
     while ((opt = getopt_long(argc, argv, "hp:d:t:", long_option, NULL)) != -1)
@@ -111,13 +112,13 @@ static void check_option(int argc, char *argv[]){
             case 'h':
                 printf("\033[31m USAGE: \033[0m\n" 
                        "\t-p PORT\n"
-                       "-d DIR"
+                       "\t-d DIR"
+                       "\t-t THREAD_NUM"
                 );
-                exit(1);
+                exit(0);
             case 'd':
                 printf("working dir:%s\n",optarg);
-                dir = optarg+1;
-                // printf("%s;%ld\n",dir,strlen(dir));
+                printf("%s;%ld\n",dir,strlen(dir));
                 break;
             case 'p':
                 printf("setting port:%s\n",optarg);
@@ -139,7 +140,7 @@ static void check_option(int argc, char *argv[]){
             printf("%s", argv[optind++]);
         }
         putchar ('\n');
-        exit(1);
+        exit(-1);
     }
 }
 

@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Debug",
             "program": "${workspaceFolder}/build/httpsrv",
-            "args": ["-p 3000","-d www"],
+            "args": ["-p","3000","-d","www"],
             "cwd": "${workspaceFolder}",
             "terminal" : "integrated"
         }
