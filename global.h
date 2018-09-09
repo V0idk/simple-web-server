@@ -7,7 +7,7 @@
 extern struct epoll_event *events;
 extern priority_queue_t server_timer;
 extern int port;
-extern char *dir;
+extern char dir[1024];
 extern int worker_num;
 
 #endif

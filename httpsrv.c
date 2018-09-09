@@ -30,19 +30,16 @@ int main(int argc, char *argv[])
 {
     //参数设置
     check_option(argc,argv);
-    //屏蔽SIGPIPE,意外断开的客户端写入将产生SIGPIPE导致服务端进程终止
+    //屏蔽SIGPIPE,管道或socket的另一端已关闭. 写端会触发SIGPIPE信号导致服务端进程终止
     set_sig_handler(SIGPIPE,SIG_IGN);
     //创建监听描述符:SO_REUSEADDR,非阻塞
     int listenfd = create_listenfd();
     //创建epoll并添加监听描述符
     int epfd = creat_epollfd();
-    //添加监听描述符到epfd
+    //添加监听描述符到epfd: 可读, 边缘触发
     http_request_t *request = (http_request_t *)malloc(sizeof(http_request_t));
     epoll_add_fd(epfd,listenfd, EPOLLIN | EPOLLET,request);
     //线程池: 默认4 worker
-    socklen_t clilen;
-    struct sockaddr_in cliaddr;
-    clilen = sizeof(struct sockaddr_in);
     threadpool thpool = thpool_init(worker_num);
     //初始化timer
     timer_init();
@@ -63,7 +60,7 @@ int main(int argc, char *argv[])
                 int infd;
                 while (1)
                 {
-                    infd = accept(listenfd, (struct sockaddr *)&cliaddr, &clilen);
+                    infd = accept(listenfd, NULL,NULL);
                     if (infd < 0)
                     {
                         //EAGAIN,EWOULDBLOCK属于本应阻塞错误, 可重试.
@@ -118,7 +115,8 @@ static void check_option(int argc, char *argv[]){
                 exit(0);
             case 'd':
                 printf("working dir:%s\n",optarg);
-                printf("%s;%ld\n",dir,strlen(dir));
+                dir[0] = dir[1] = '\0';
+                sprintf(dir,"%s",optarg);
                 break;
             case 'p':
                 printf("setting port:%s\n",optarg);
@@ -149,7 +147,7 @@ static void set_sig_handler(int sig,void (*func)(int)){
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = func;
     sa.sa_flags = 0;
-    if (sigaction(sig, &sa, NULL))
+    if (sigaction(sig, &sa, NULL) == -1)
         log_err("err sigaction\n");
 }
 

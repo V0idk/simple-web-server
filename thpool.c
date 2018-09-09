@@ -103,12 +103,9 @@ int thpool_add_task(thpool* thpool_ptr, void (*function)(void*), void* arg){
     t->tail = task_;
   }
   t->task_num++;
-  //立即通知
-  pthread_mutex_lock(&t->not_empty_lock);
-  pthread_cond_signal(&t->not_empty_cond);
-  pthread_mutex_unlock(&t->not_empty_lock);
-
   pthread_mutex_unlock(&t->rw_lock);
+  //立即通知
+  pthread_cond_signal(&t->not_empty_cond);
   return 0;
 }
 
@@ -130,11 +127,6 @@ static task * get_task(taskqueue *tasks){
 		default:
 					tasks->head = task_p->prev;
 					tasks->task_num--;
-
-          pthread_mutex_lock(&tasks->not_empty_lock);
-          pthread_cond_signal(&tasks->not_empty_cond);
-          pthread_mutex_unlock(&tasks->not_empty_lock);
-
 	}
   pthread_mutex_unlock(&tasks->rw_lock);
   return task_p;
