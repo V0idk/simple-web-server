@@ -10,6 +10,7 @@
 #include "pq.h"
 #include "util.h"
 
+#define PQ_INIT_SIZE 100
 typedef struct{
     size_t expire_time;
     int deleted;
@@ -25,7 +26,6 @@ static int timer_comp_small(void *node1, void *node2) {
 }
 
 int timer_init() {
-    #define PQ_INIT_SIZE 100
     pq_init(&server_timer, timer_comp_small, PQ_INIT_SIZE);
     return 0;
 }
@@ -77,9 +77,6 @@ int get_timewait() {
     timer_node_t *timer_node;
     int timeout = -1;  //队列空则无限阻塞
     while (!pq_is_empty(&server_timer)) {
-        //获取当前时间
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
         //处理过期时间
         handle_expire_time();
         if(pq_is_empty(&server_timer)){
@@ -89,6 +86,9 @@ int get_timewait() {
         if (timer_node->deleted) {
             continue;
         }else{
+            //获取当前时间
+            struct timeval tv;
+            gettimeofday(&tv, NULL);
             timeout = timer_node->expire_time - (tv.tv_sec * 1000 + tv.tv_usec / 1000);
             timeout = (timeout > 0? timeout: 0);
             break;

@@ -9,5 +9,5 @@ extern priority_queue_t server_timer;
 extern int port;
 extern char dir[1024];
 extern int worker_num;
-
+extern pthread_mutex_t timer_lock;
 #endif

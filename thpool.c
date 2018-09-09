@@ -19,7 +19,7 @@ typedef struct taskqueue{
   pthread_cond_t not_empty_cond;//非空通知.
   task* head;
   task* tail;
-  size_t task_num;
+  volatile size_t task_num;
 } taskqueue;
 
 
@@ -30,8 +30,6 @@ typedef struct thpool {
   volatile size_t working_thread_num; //正在执行任务的线程数量
   taskqueue tasks; //任务列表
   pthread_mutex_t tplock;//用于修改working_thread_num
-  // pthread_cond_t  tpcond;
-
 } thpool;
 
 
@@ -107,7 +105,6 @@ int thpool_add_task(thpool* thpool_ptr, void (*function)(void*), void* arg){
   return 0;
 }
 
-
 static task * get_task(taskqueue *tasks){
   pthread_mutex_lock(&tasks->rw_lock);
   
@@ -160,5 +157,8 @@ static void* thread_loop(struct thpool* thpool_ptr){
     }
 
   }
+  pthread_mutex_lock(&thpool_ptr->tplock);
+  thpool_ptr->total_thread_num--;
+  pthread_mutex_unlock(&thpool_ptr->tplock);
   return NULL;
 }

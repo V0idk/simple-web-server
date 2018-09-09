@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
     threadpool thpool = thpool_init(worker_num);
     //初始化timer
     timer_init();
+    pthread_mutex_init(&timer_lock,NULL);
     //事件循环
     for (;;)
     {
@@ -71,7 +72,9 @@ int main(int argc, char *argv[])
                     make_socket_non_blocking(infd);
                     http_request_t *request = (http_request_t *)malloc(sizeof(http_request_t));
                     epoll_add_fd(epfd,infd, EPOLLIN | EPOLLET | EPOLLONESHOT, request);
+                    pthread_mutex_lock(&timer_lock);
                     add_timer(request, TIMEOUT_DEFAULT, http_expire_handler);
+                    pthread_mutex_unlock(&timer_lock);
                 } // end of while of accept
             }
             /*  若是已连接描述符有了可读事件, 则将任务添加到任务队列中 */
@@ -212,7 +215,9 @@ static int worker_loop(void *ptr){
                     request->finish = 0;
                     event.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
                     epoll_ctl(request->epfd, EPOLL_CTL_MOD, request->fd, &event);
+                    pthread_mutex_lock(&timer_lock);
                     add_timer(request, TIMEOUT_DEFAULT, http_expire_handler);
+                    pthread_mutex_unlock(&timer_lock);
                     return 0;
                 }else{
                     clean_request(request);
