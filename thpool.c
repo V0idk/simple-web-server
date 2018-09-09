@@ -15,8 +15,7 @@ typedef struct task{
 } task;
 
 typedef struct taskqueue{
-  pthread_mutex_t rw_lock;
-  pthread_mutex_t not_empty_lock;
+  pthread_mutex_t rw_lock;//整个成员的锁
   pthread_cond_t not_empty_cond;//非空通知.
   task* head;
   task* tail;
@@ -63,7 +62,6 @@ thpool * thpool_init(size_t thread_num){
   }
   pthread_mutex_init(&thpool_ptr->tplock,NULL);
   pthread_mutex_init(&thpool_ptr->tasks.rw_lock,NULL);
-  pthread_mutex_init(&thpool_ptr->tasks.not_empty_lock,NULL);
   pthread_cond_init(&thpool_ptr->tasks.not_empty_cond,NULL);
   // pthread_cond_init(&thpool_ptr->tpcond, NULL);
 
@@ -137,12 +135,12 @@ static void* thread_loop(struct thpool* thpool_ptr){
   taskqueue * t = &thpool_ptr->tasks;
   while(thpool_keepalive){
     //等待有任务
-    pthread_mutex_lock(&t->not_empty_lock);
+    pthread_mutex_lock(&t->rw_lock);
     while(t->task_num<1){
-      pthread_cond_wait(&t->not_empty_cond, &t->not_empty_lock);
+      pthread_cond_wait(&t->not_empty_cond, &t->rw_lock);
     }
     //应该立即解锁. 加快其他线程进入取任务
-    pthread_mutex_unlock(&t->not_empty_lock);
+    pthread_mutex_unlock(&t->rw_lock);
     if(thpool_keepalive){
 
       pthread_mutex_lock(&thpool_ptr->tplock);
