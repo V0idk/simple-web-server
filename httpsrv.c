@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     //事件循环
     for (;;)
     {
-        size_t timeout = get_timewait();
+        size_t timeout = get_timewait();//incomplete
         int n = epoll_wait(epfd, events, MAXEVENTS,timeout);
         //若存在可读描述符, 遍历描述符
         for (int i = 0; i < n; i++)
