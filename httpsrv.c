@@ -72,24 +72,21 @@ int main(int argc, char *argv[])
                     make_socket_non_blocking(infd);
                     http_request_t *request = (http_request_t *)malloc(sizeof(http_request_t));
                     epoll_add_fd(epfd,infd, EPOLLIN | EPOLLET | EPOLLONESHOT, request);
-                    pthread_mutex_lock(&timer_lock);
                     add_timer(request, TIMEOUT_DEFAULT, http_expire_handler);
-                    pthread_mutex_unlock(&timer_lock);
                 } // end of while of accept
             }
             /*  若是已连接描述符有了可读事件, 则将任务添加到任务队列中 */
             else
             {
-                
+                del_timer(events[i].data.ptr);
                 if ((events[i].events & EPOLLERR) || //发生错误
-                    (events[i].events & EPOLLHUP) || //
+                    (events[i].events & EPOLLHUP) ||
                     (!(events[i].events & EPOLLIN)))
                 {
                     log_warns("epoll error fd: %d", r->fd);
-                    Close(fd);
+                    clean_request(r); //移除该文件描述符
                     continue;
                 }
-                del_timer(events[i].data.ptr);
                 thpool_add_task(thpool, (void (*)(void *))worker_loop, events[i].data.ptr);
             }
         } 
@@ -215,9 +212,7 @@ static int worker_loop(void *ptr){
                     request->finish = 0;
                     event.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
                     epoll_ctl(request->epfd, EPOLL_CTL_MOD, request->fd, &event);
-                    pthread_mutex_lock(&timer_lock);
                     add_timer(request, TIMEOUT_DEFAULT, http_expire_handler);
-                    pthread_mutex_unlock(&timer_lock);
                     return 0;
                 }else{
                     clean_request(request);

@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <sys/time.h>
-
+#include <pthread.h>
 
 #include "global.h"
 #include "http_request.h"
@@ -40,7 +40,9 @@ void add_timer(http_request_t *request,  size_t timeout, expire_handler handler)
     timer_node->deleted = 0;
     timer_node->handler = handler;
     timer_node->request = request;
+    pthread_mutex_lock(&timer_lock);
     pq_insert(&server_timer, timer_node);
+    pthread_mutex_unlock(&timer_lock);
 }
 
 
@@ -76,6 +78,7 @@ static void handle_expire_time(){
 int get_timewait() {
     timer_node_t *timer_node;
     int timeout = -1;  //队列空则无限阻塞
+    pthread_mutex_lock(&timer_lock);
     while (!pq_is_empty(&server_timer)) {
         //处理过期时间
         handle_expire_time();
@@ -94,6 +97,7 @@ int get_timewait() {
             break;
         }
     }
+    pthread_mutex_unlock(&timer_lock);
     return timeout;
 }
 
